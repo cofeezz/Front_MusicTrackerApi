@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Music Tracker",
@@ -19,6 +20,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "experiments": {
+      "baseUrl": "/Front_MusicTrackerApi"
     }
   }
 }
