@@ -9,7 +9,6 @@ import {
   createListen,
   createTrack,
   fetchRanking,
-  findUserId,
   registerUser,
   revokeApiKey,
   searchTracks,
@@ -30,6 +29,9 @@ const PERIODS = [
   { key: 'all', label: 'De sempre' },
   { key: 'month', label: 'Este mês' },
 ];
+
+const PRIVACY_NOTICE =
+  'Seu e-mail e suas escutas são privados: só você os vê. Ao criar a conta, você concorda que suas escutas poderão ser usadas, de forma agregada e anônima, para comparar seu ranking com o da comunidade (por exemplo, a porcentagem de ouvintes de cada música), sem mostrar nomes a ninguém.';
 
 const GENRES = [
   { value: 'POP', label: 'Pop' },
@@ -70,10 +72,9 @@ export default function App() {
     [expireSession]
   );
 
-  const startSession = async (username, password, knownUserId) => {
+  const startSession = async (username, password) => {
     const key = await createApiKey({ username, password, name: 'app' });
-    const userId = knownUserId !== undefined ? knownUserId : await findUserId(username, key.key);
-    setSession({ userId, username, apiKey: key.key, keyId: key.id });
+    setSession({ userId: key.userId, username, apiKey: key.key, keyId: key.id });
     setTab('listen');
   };
 
@@ -103,8 +104,8 @@ export default function App() {
       if (!username || !email || !password) {
         throw new Error('Preencha nome de usuário, e-mail e senha.');
       }
-      const user = await registerUser({ username, email, password });
-      await startSession(username, password, user.id);
+      await registerUser({ username, email, password });
+      await startSession(username, password);
     });
 
   const handleLogout = async () => {
@@ -197,6 +198,7 @@ export default function App() {
                 loading={authLoading}
                 error={authError}
                 notice={authNotice}
+                privacyNotice={PRIVACY_NOTICE}
                 onLogin={handleLogin}
                 onRegister={handleRegister}
               />

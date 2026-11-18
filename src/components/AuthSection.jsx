@@ -6,7 +6,7 @@ import Message from './Message';
 import Section from './Section';
 import TextField from './TextField';
 
-export default function AuthSection({ title, subtitle, loading, error, notice, onLogin, onRegister }) {
+export default function AuthSection({ title, subtitle, loading, error, notice, privacyNotice, onLogin, onRegister }) {
   const [creating, setCreating] = useState(false);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -39,6 +39,7 @@ export default function AuthSection({ title, subtitle, loading, error, notice, o
         placeholder="mínimo de 6 caracteres"
         secureTextEntry
       />
+      {creating ? <Message type="info" text={privacyNotice} /> : null}
       <Message type="info" text={notice} />
       <Message type="error" text={error} />
       <View style={styles.actions}>

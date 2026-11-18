@@ -82,17 +82,6 @@ export function revokeApiKey(id, apiKey) {
   return request(`/api-keys/${id}`, { method: 'DELETE', apiKey });
 }
 
-export async function findUserId(username, apiKey) {
-  const data = await request(`/users/search?username=${encodeURIComponent(username)}&size=10`, { apiKey });
-  const match = embeddedItems(data).find(
-    (user) => user.username && user.username.toLowerCase() === username.toLowerCase()
-  );
-  if (!match) {
-    throw new ApiError(404, 'Não foi possível localizar a sua conta.');
-  }
-  return match.id;
-}
-
 export async function searchTracks(name) {
   const data = await request(`/tracks/search?name=${encodeURIComponent(name)}&size=10`);
   return embeddedItems(data);
