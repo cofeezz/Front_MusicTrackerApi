@@ -1,22 +1,30 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing } from '../theme';
+import ArtistPicker from './ArtistPicker';
 import Button from './Button';
-import Chips from './Chips';
 import Message from './Message';
 import Section from './Section';
 import TextField from './TextField';
 import TrackItem from './TrackItem';
 
-export default function ListenSection({ title, subtitle, genres, onSearch, onCreateTrack, onRegister }) {
+export default function ListenSection({
+  title,
+  subtitle,
+  genres,
+  onSearch,
+  onSearchArtists,
+  onCreateArtist,
+  onCreateTrack,
+  onRegister,
+}) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState(null);
   const [selected, setSelected] = useState(null);
   const [seconds, setSeconds] = useState('180');
   const [showNew, setShowNew] = useState(false);
-  const [artistName, setArtistName] = useState('');
+  const [artist, setArtist] = useState(null);
   const [trackName, setTrackName] = useState('');
-  const [genre, setGenre] = useState(genres[0].value);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState({ type: 'info', text: '' });
 
@@ -42,14 +50,17 @@ export default function ListenSection({ title, subtitle, genres, onSearch, onCre
 
   const createTrack = () =>
     run(async () => {
-      if (!artistName.trim() || !trackName.trim()) {
-        throw new Error('Informe o artista e o nome da música.');
+      if (!artist) {
+        throw new Error('Escolha primeiro o artista da música.');
       }
-      const track = await onCreateTrack({ artistName: artistName.trim(), trackName: trackName.trim(), genre });
+      if (!trackName.trim()) {
+        throw new Error('Informe o nome da música.');
+      }
+      const track = await onCreateTrack({ artistId: artist.id, artistName: artist.name, trackName: trackName.trim() });
       setSelected(track);
       setResults(null);
       setShowNew(false);
-      setArtistName('');
+      setArtist(null);
       setTrackName('');
       setFeedback({ type: 'success', text: 'Música cadastrada e selecionada. Agora é só registrar a escuta.' });
     });
@@ -92,10 +103,17 @@ export default function ListenSection({ title, subtitle, genres, onSearch, onCre
       />
       {showNew ? (
         <View style={styles.newBox}>
-          <TextField label="Artista" value={artistName} onChangeText={setArtistName} autoCapitalize="words" />
+          <Text style={styles.step}>1. Escolha o artista (ele precisa já estar cadastrado)</Text>
+          <ArtistPicker
+            genres={genres}
+            selected={artist}
+            onSelect={setArtist}
+            onSearch={onSearchArtists}
+            onCreate={onCreateArtist}
+          />
+          <Text style={styles.step}>2. Nome da música</Text>
           <TextField label="Música" value={trackName} onChangeText={setTrackName} autoCapitalize="words" />
-          <Chips label="Gênero do artista" options={genres} value={genre} onChange={setGenre} />
-          <Button title="Cadastrar e selecionar" onPress={createTrack} loading={busy} />
+          <Button title="Cadastrar música e selecionar" onPress={createTrack} loading={busy} disabled={!artist} />
         </View>
       ) : null}
 
@@ -128,6 +146,11 @@ const styles = StyleSheet.create({
   },
   newBox: {
     gap: spacing.md,
+  },
+  step: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   registerBox: {
     gap: spacing.md,
