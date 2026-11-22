@@ -12,6 +12,8 @@ function newIdempotencyKey() {
   return `app-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
+const pendingKeys = new Map();
+
 function embeddedItems(data) {
   if (!data || !data._embedded) {
     return [];
@@ -30,8 +32,13 @@ async function request(path, { method = 'GET', body, apiKey, version } = {}) {
   if (version) {
     headers['X-API-Version'] = version;
   }
+  let pendingId = null;
   if (method === 'POST') {
-    headers['X-Idempotency-Key'] = newIdempotencyKey();
+    pendingId = `${path}|${apiKey || ''}|${JSON.stringify(body === undefined ? null : body)}`;
+    if (!pendingKeys.has(pendingId)) {
+      pendingKeys.set(pendingId, newIdempotencyKey());
+    }
+    headers['X-Idempotency-Key'] = pendingKeys.get(pendingId);
   }
 
   let response;
@@ -46,6 +53,10 @@ async function request(path, { method = 'GET', body, apiKey, version } = {}) {
       0,
       'Não foi possível conectar ao servidor. Se ele estava parado, aguarde cerca de 1 minuto e tente de novo.'
     );
+  }
+
+  if (pendingId && response.status !== 409 && response.status !== 429 && response.status < 500) {
+    pendingKeys.delete(pendingId);
   }
 
   if (response.status === 204) {
@@ -84,6 +95,11 @@ export function revokeApiKey(id, apiKey) {
 
 export async function searchTracks(name) {
   const data = await request(`/tracks/search?name=${encodeURIComponent(name)}&size=10`);
+  return embeddedItems(data);
+}
+
+export async function searchArtists(name) {
+  const data = await request(`/artists/search?name=${encodeURIComponent(name)}&size=10`);
   return embeddedItems(data);
 }
 

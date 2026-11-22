@@ -11,6 +11,7 @@ import {
   fetchRanking,
   registerUser,
   revokeApiKey,
+  searchArtists,
   searchTracks,
 } from './src/api';
 import AuthSection from './src/components/AuthSection';
@@ -124,11 +125,18 @@ export default function App() {
 
   const handleSearch = (name) => searchTracks(name);
 
-  const handleCreateTrack = ({ artistName, trackName, genre }) =>
+  const handleSearchArtists = (name) => searchArtists(name);
+
+  const handleCreateArtist = ({ name, genre }) =>
     guarded(async () => {
-      const artist = await createArtist({ name: artistName, genre }, session.apiKey);
-      const track = await createTrack({ name: trackName, artistId: artist.id }, session.apiKey);
-      return { id: track.id, name: track.name, artistName: artist.name };
+      const artist = await createArtist({ name, genre }, session.apiKey);
+      return { id: artist.id, name: artist.name };
+    });
+
+  const handleCreateTrack = ({ artistId, artistName, trackName }) =>
+    guarded(async () => {
+      const track = await createTrack({ name: trackName, artistId }, session.apiKey);
+      return { id: track.id, name: track.name, artistName };
     });
 
   const handleRegisterListen = ({ trackId, durationSeconds }) =>
@@ -171,9 +179,11 @@ export default function App() {
                 {tab === 'listen' ? (
                   <ListenSection
                     title="Registrar escuta"
-                    subtitle="Busque a música que você ouviu ou cadastre uma nova."
+                    subtitle="Busque a música que você ouviu. Para cadastrar uma nova, escolha antes o artista."
                     genres={GENRES}
                     onSearch={handleSearch}
+                    onSearchArtists={handleSearchArtists}
+                    onCreateArtist={handleCreateArtist}
                     onCreateTrack={handleCreateTrack}
                     onRegister={handleRegisterListen}
                   />
